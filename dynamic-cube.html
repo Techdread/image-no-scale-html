@@ -40,8 +40,8 @@
 
         .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 4px;
             margin-top: 20px;
         }
 
@@ -50,6 +50,8 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
+            width: 100px;
+            height: 150px;
         }
 
         .image-preview img {
@@ -100,9 +102,6 @@
         <h1>Multi-Image Dynamic Cuboid</h1>
         <button id="uploadButton" class="button">Add Images</button>
         <input id="fileInput" type="file" accept="image/*" multiple style="display: none;">
-
-        <div id="grid" class="grid"></div>
-
         <div class="dimension-inputs">
             <label>
                 Width: <input type="number" id="widthInput" value="4" step="0.1">
@@ -115,8 +114,12 @@
             </label>
             <button id="updateDimensionsButton" class="button">Update Dimensions</button>
         </div>
-
         <div id="scene"></div>
+        <div id="grid" class="grid"></div>
+
+
+
+
     </div>
 
     <script type="importmap">
@@ -289,11 +292,9 @@
                 animate();
             }
 
-            // Remove existing cube
-            if (scene.children.find(child => child.isMesh)) {
-                const existingCube = scene.children.find(child => child.isMesh);
-                scene.remove(existingCube);
-            }
+            // Remove existing cube and wireframe
+            const meshes = scene.children.filter(child => child.isMesh || child.type === 'LineSegments');
+            meshes.forEach(mesh => scene.remove(mesh));
 
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const materials = textures.map((texture, index) => {
@@ -306,6 +307,13 @@
 
             const cube = new THREE.Mesh(geometry, materials);
             scene.add(cube);
+
+            // Add wireframe around the cube
+            const wireframe = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geometry),
+                new THREE.LineBasicMaterial({ color: 'black' })
+            );
+            scene.add(wireframe);
         };
 
         function animate() {
